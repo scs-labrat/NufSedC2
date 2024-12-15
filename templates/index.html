@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>NufSed C2 Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"/>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        :root {
+            --background-color: #1f1f2f;
+            --panel-color: #2a2a3b;
+            --accent-color: #00ff7f;
+            --border-color: #444;
+            --text-color: #ffffff;
+            --subtle-text-color: #a0a0a0;
+            --hover-overlay: rgba(255, 255, 255, 0.1);
+            --font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            background: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            font-family: var(--font-family);
+            font-size: 14px;
+            overflow: hidden;
+        }
+
+        .top-nav {
+            background: linear-gradient(to right, #2a2a3b, #24243e);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 60px;
+            box-sizing: border-box;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .top-nav h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .top-nav .right-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .top-nav .right-section input {
+            width: 200px;
+            background: #2f2f45;
+            border: 1px solid #3f3f5f;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+
+        .global-info {
+            background: #24243e;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 50px;
+            box-sizing: border-box;
+        }
+
+        .global-info .info-item {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .global-info .info-item span {
+            font-size: 0.8rem;
+            color: var(--subtle-text-color);
+        }
+
+        .global-info .info-item strong {
+            font-size: 1rem;
+            color: var(--accent-color);
+            font-weight: 500;
+        }
+
+        .nav-bar {
+            background: #2a2a3b;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 10px 20px;
+        }
+
+        .nav-bar button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        .nav-bar button:hover,
+        .nav-bar button.active {
+            background: var(--hover-overlay);
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 170px);
+            overflow: hidden;
+        }
+
+        .section {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 15px;
+        }
+
+        .section.active {
+            display: flex;
+        }
+
+        .implants-container {
+            display: flex;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #24243e;
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            box-shadow: inset -1px 0 0 #333;
+        }
+
+        .implant-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .implant-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            position: relative;
+        }
+
+        .implant-row:hover {
+            background: var(--hover-overlay);
+        }
+
+        .implant-row img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+
+        .detail-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding-left: 15px;
+        }
+
+        .detail-header {
+            background: #24243e;
+            border-bottom: 1px solid var(--border-color);
+            height: 60px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .detail-header h3,
+        .detail-header p {
+            margin: 0;
+            font-size: 1.25rem;
+            text-align: center;
+            font-weight: 400;
+            color: var(--text-color);
+        }
+
+        .detail-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .detail-body-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            gap: 20px;
+        }
+
+        .detail-info,
+        .detail-charts {
+            background: #1e1e2f;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            flex: 1;
+            overflow: auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        .detail-info h4, .detail-charts h4 {
+            margin-top: 0;
+            font-weight: 500;
+            font-size: 1.1rem;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+        }
+
+        .detail-images {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .detail-images img {
+            width: 100%;
+            height: auto;
+            border: 1px solid #444;
+            border-radius: 5px;
+            transition: transform 0.2s ease;
+        }
+
+        .detail-images img:hover {
+            transform: scale(1.02);
+        }
+
+        .terminal-container {
+            margin-top: 15px;
+        }
+
+        .terminal {
+            background-color: #000;
+            color: #00ff00;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            border: 1px solid #444;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+
+        .collapse-btn {
+            margin-top: 15px;
+            background: #3a3a4a;
+            border: none;
+            color: #fff;
+            transition: background 0.2s ease;
+        }
+
+        .collapse-btn:hover {
+            background: #4a4a5a;
+        }
+
+        .global-terminal-area {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .global-terminal-controls {
+            margin-bottom: 10px;
+        }
+
+        .global-terminal {
+            background: #000;
+            color: #00ff00;
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+
+        .agents-placeholder {
+            color: #aaa;
+            font-size: 1.2rem;
+            margin-top: 50px;
+            text-align: center;
+        }
+
+        /* Fixed size for the subnet-chart to ensure it has space */
+        #subnet-chart {
+            width: 400px;
+            height: 200px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #2a2a3b;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 5px;
+            font-size: 12px;
+            background: #333;
+            color: #fff;
+            border-radius: 3px;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 1000;
+            transition: opacity 0.2s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-nav">
+        <h1>NufSed C2 Dashboard</h1>
+        <div class="right-section">
+            <div>
+                <label for="commandInput" class="me-2">Global Command:</label>
+                <input type="text" id="commandInput" class="form-control d-inline-block" placeholder="Type a command...">
+            </div>
+            <div>
+                <p class="m-0">Server Stats: Active Implants: <span id="activeImplants">0</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="global-info">
+        <div class="info-item">
+            <span>Total Implants:</span>
+            <strong id="totalImplants">0</strong>
+        </div>
+        <div class="info-item">
+            <span>Disconnected:</span>
+            <strong id="disconnectedImplants">0</strong>
+        </div>
+        <div class="info-item">
+            <span>System Uptime:</span>
+            <strong>3d 14h</strong>
+        </div>
+        <div class="info-item">
+            <span>Last Command Executed:</span>
+            <strong id="lastCommand">None</strong>
+        </div>
+    </div>
+
+    <div class="nav-bar">
+        <button id="navGlobalBtn" class="active">Global</button>
+        <button id="navImplantsBtn">Implants</button>
+        <button id="navAgentsBtn">Agents</button>
+        <button id="navCommandsBtn">Commands</button>
+    </div>
+
+    <div class="main-container">
+        <!-- Global Section -->
+        <div class="section active" id="globalSection">
+            <div class="global-terminal-area">
+                <div class="global-terminal-controls">
+                    <input type="text" id="implantIndexInput" class="form-control d-inline-block w-auto me-2" placeholder="Implant index #">
+                    <button class="btn btn-primary" id="connectButton">Connect</button>
+                </div>
+                <div class="global-terminal" id="globalTerminal">
+                    Welcome to NufSed C2 Global Terminal...
+                </div>
+            </div>
+        </div>
+
+        <!-- Implants Section -->
+        <div class="section" id="implantsSection">
+            <div class="implants-container">
+                <div class="sidebar">
+                    <ul class="implant-list" id="implantSelection"></ul>
+                </div>
+                <div class="detail-area">
+                    <div class="detail-header">
+                        <p class="text-center text-muted m-0">Select an implant to view details</p>
+                    </div>
+                    <div class="detail-body" id="implantDetail">
+                        <p class="text-center text-muted">Select an implant to view details</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agents Section -->
+        <div class="section" id="agentsSection">
+            <div class="agents-placeholder">
+                Agents view not implemented yet.
+            </div>
+        </div>
+
+        <!-- Commands Section -->
+        <div class="section" id="commandsSection">
+            <div class="commands-container">
+                <div class="command-category-buttons">
+                    <button class="btn btn-secondary" data-category="general">General</button>
+                    <button class="btn btn-secondary" data-category="listener">Listener</button>
+                    <button class="btn btn-secondary" data-category="session">Session Mgt</button>
+                    <button class="btn btn-secondary" data-category="payload">Payload Gen</button>
+                </div>
+                <div class="command-buttons" id="commandButtonsRow"></div>
+
+                <div class="commands-terminal" id="commandsTerminal">
+                    Welcome to the NufSed C2 Commands Terminal...
+                </div>
+                <div class="commands-input-line">
+                    <input type="text" id="commandsInputField" class="form-control" placeholder="Type or modify command here and press Enter">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let mode = 'mock'; // 'mock' or 'real'
+        let implants = [];
+        let realDataLoaded = false;
+
+        // Mock data as before:
+        const mockImplants = [
+            {
+                id: "implant-1",
+                status: "connected",
+                lastResponse: "No response yet",
+                user: "Ryan",
+                role: "Admin",
+                thumbnail: "/static/images/thumb1.jpg",
+                cam: "/static/images/cam1.jpg",
+                subnet: {
+                    "192.168.1.0": { detectedDevices: 5, ips: ["192.168.1.10", "192.168.1.20", "192.168.1.30", "192.168.1.40", "192.168.1.50"] },
+                    "192.168.2.0": { detectedDevices: 3, ips: ["192.168.2.10", "192.168.2.20", "192.168.2.30"] }
+                }
+            },
+            {
+                id: "implant-2",
+                status: "disconnected",
+                lastResponse: "Error: Timeout",
+                user: "Alice",
+                role: "Guest",
+                thumbnail: "/static/images/cam1.jpg",
+                cam: "/static/images/cam1.jpg",
+                subnet: {
+                    "10.0.0.0": { detectedDevices: 2, ips: ["10.0.0.10", "10.0.0.20"] },
+                    "10.1.0.0": { detectedDevices: 4, ips: ["10.1.0.10", "10.1.0.20", "10.1.0.30", "10.1.0.40"] }
+                }
+            },
+            {
+                id: "implant-3",
+                status: "connected",
+                lastResponse: "Directory listed successfully",
+                user: "Root",
+                role: "Superuser",
+                thumbnail: "/static/images/thumb3.jpg",
+                cam: "/static/images/cam3.jpg",
+                subnet: {
+                    "172.16.0.0": { detectedDevices: 6, ips: ["172.16.0.10", "172.16.0.20", "172.16.0.30", "172.16.0.40", "172.16.0.50", "172.16.0.60"] },
+                    "172.16.1.0": { detectedDevices: 2, ips: ["172.16.1.10", "172.16.1.20"] }
+                }
+            },
+            {
+                id: "implant-4",
+                status: "disconnected",
+                lastResponse: "Error: Connection lost",
+                user: "Jane",
+                role: "Operator",
+                thumbnail: "/static/images/thumb4.jpg",
+                cam: "/static/images/cam2.jpg",
+                subnet: {
+                    "192.168.3.0": { detectedDevices: 4, ips: ["192.168.3.10", "192.168.3.20", "192.168.3.30", "192.168.3.40"] },
+                    "192.168.4.0": { detectedDevices: 1, ips: ["192.168.4.10"] }
+                }
+            },
+            {
+                id: "implant-5",
+                status: "connected",
+                lastResponse: "Payload executed",
+                user: "Mark",
+                role: "Analyst",
+                thumbnail: "/static/images/thumb5.png",
+                cam: "/static/images/cam1.jpg",
+                subnet: {
+                    "10.2.0.0": { detectedDevices: 3, ips: ["10.2.0.10", "10.2.0.20", "10.2.0.30"] },
+                    "10.3.0.0": { detectedDevices: 5, ips: ["10.3.0.10", "10.3.0.20", "10.3.0.30", "10.3.0.40", "10.3.0.50"] }
+                }
+            },
+            {
+                id: "implant-6",
+                status: "disconnected",
+                lastResponse: "Error: No route to host",
+                user: "Laura",
+                role: "Manager",
+                thumbnail: "/static/images/thumb4.jpg",
+                cam: "/static/images/cam3.jpg",
+                subnet: {
+                    "192.168.5.0": { detectedDevices: 2, ips: ["192.168.5.10", "192.168.5.20"] },
+                    "192.168.6.0": { detectedDevices: 2, ips: ["192.168.6.10", "192.168.6.20"] }
+                }
+            },
+            {
+                id: "implant-7",
+                status: "connected",
+                lastResponse: "Task completed successfully",
+                user: "Steve",
+                role: "Developer",
+                thumbnail: "/static/images/thumb5.png",
+                cam: "/static/images/cam2.jpg",
+                subnet: {
+                    "172.17.0.0": { detectedDevices: 7, ips: ["172.17.0.10","172.17.0.20","172.17.0.30","172.17.0.40","172.17.0.50","172.17.0.60","172.17.0.70"] },
+                    "172.17.1.0": { detectedDevices: 8, ips: ["172.17.1.10","172.17.1.20","172.17.1.30","172.17.1.40","172.17.1.50","172.17.1.60","172.17.1.70","172.17.1.80"] }
+                }
+            },
+            {
+                id: "implant-8",
+                status: "disconnected",
+                lastResponse: "Error: Host unreachable",
+                user: "Diana",
+                role: "Researcher",
+                thumbnail: "/static/images/thumb1.jpg",
+                cam: "/static/images/cam8.jpg",
+                subnet: {
+                    "10.4.0.0": { detectedDevices: 1, ips: ["10.4.0.10"] },
+                    "10.5.0.0": { detectedDevices: 3, ips: ["10.5.0.10","10.5.0.20","10.5.0.30"] }
+                }
+            },
+            {
+                id: "implant-9",
+                status: "connected",
+                lastResponse: "Listening on port 8080",
+                user: "Paul",
+                role: "Technician",
+                thumbnail: "/static/images/thumb3.jpg",
+                cam: "/static/images/cam1.jpg",
+                subnet: {
+                    "192.168.7.0": { detectedDevices: 6, ips: ["192.168.7.10","192.168.7.20","192.168.7.30","192.168.7.40","192.168.7.50","192.168.7.60"] },
+                    "192.168.8.0": { detectedDevices: 4, ips: ["192.168.8.10","192.168.8.20","192.168.8.30","192.168.8.40"] }
+                }
+            },
+            {
+                id: "implant-10",
+                status: "connected",
+                lastResponse: "User authenticated",
+                user: "Chris",
+                role: "Supervisor",
+                thumbnail: "/static/images/thumb2.jpg",
+                cam: "/static/images/cam3.jpg",
+                subnet: {
+                    "10.6.0.0": { detectedDevices: 5, ips: ["10.6.0.10","10.6.0.20","10.6.0.30","10.6.0.40","10.6.0.50"] },
+                    "10.7.0.0": { detectedDevices: 7, ips: ["10.7.0.10","10.7.0.20","10.7.0.30","10.7.0.40","10.7.0.50","10.7.0.60","10.7.0.70"] }
+                }
+            }
+        ];
+        
+        // Mock log content to display in the global terminal
+        const mockLog = `
+[2024-04-25 10:00:00] System initialized.
+[2024-04-25 10:05:00] Implant-1 connected.
+[2024-04-25 10:10:00] Implant-2 disconnected.
+[2024-04-25 10:15:00] Implant-3 connected.
+[2024-04-25 10:20:00] Command executed: help
+[2024-04-25 10:25:00] Implant-1 response: No response yet
+[2024-04-25 10:30:00] Implant-4 disconnected.
+[2024-04-25 10:35:00] Implant-5 connected.
+`;
+
+        function loadImplantSelection() {
+            const selectionContainer = document.getElementById("implantSelection");
+            selectionContainer.innerHTML = "";
+            if (implants.length === 0) {
+                selectionContainer.innerHTML = `<li class="implant-row"><div><strong>No Implants Loaded</strong></div></li>`;
+                return;
+            }
+
+            implants.forEach(implant => {
+                const row = document.createElement("li");
+                row.className = "implant-row";
+                row.innerHTML = `
+                    <div>
+                        <strong>${implant.id}</strong> (${implant.status})
+                    </div>
+                    <div>
+                        <img src="${implant.thumbnail}" alt="${implant.id}">
+                    </div>
+                `;
+                row.onclick = () => loadImplantDetail(implant);
+                selectionContainer.appendChild(row);
+            });
+
+            // Update active implants count
+            const activeCount = implants.filter(i => i.status === "connected").length;
+            document.getElementById("activeImplants").innerText = activeCount;
+
+            // Update total and disconnected
+            document.getElementById("totalImplants").innerText = implants.length;
+            const disconnectedCount = implants.filter(i => i.status === "disconnected").length;
+            document.getElementById("disconnectedImplants").innerText = disconnectedCount;
+        }
+
+        function collapseDetail() {
+            const implantDetail = document.getElementById("implantDetail");
+            implantDetail.innerHTML = `<p class="text-center text-muted">Select an implant to view details</p>`;
+            // Also reset the header
+            const header = document.querySelector(".detail-header");
+            header.innerHTML = `<p class="text-center text-muted m-0">Select an implant to view details</p>`;
+        }
+
+        function renderSubnetChart(data) {
+            const chartDiv = document.getElementById("subnet-chart");
+            if (!chartDiv) return;
+
+            // Clear previous SVG if any
+            chartDiv.innerHTML = "";
+
+            // Fallback widths in case offsetWidth/offsetHeight return 0
+            let width = chartDiv.offsetWidth || 400;
+            let height = chartDiv.offsetHeight || 200;
+
+            const subnets = Object.keys(data);
+            const nodes = [];
+            const links = [];
+
+            subnets.forEach((subnetKey, i) => {
+                const details = data[subnetKey];
+                nodes.push({
+                    id: subnetKey,
+                    type: "subnet",
+                    detectedDevices: details.detectedDevices,
+                    subnetIndex: i
+                });
+                details.ips.forEach(ip => {
+                    nodes.push({ id: ip, type: "device", subnet: subnetKey, subnetIndex: i });
+                    links.push({ source: subnetKey, target: ip });
+                });
+            });
+
+            const svg = d3.select(chartDiv)
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+            const tooltip = d3.select("body").append("div")
+                .attr("class", "tooltip");
+
+            const color = d3.scaleOrdinal(d3.schemeSet2);
+
+            const numSubnets = subnets.length;
+            function clusterX(d) {
+                return (d.subnetIndex + 1) * (width / (numSubnets + 1));
+            }
+
+            const linkForce = d3.forceLink(links)
+                .id(d => d.id)
+                .distance(d => d.source.type === "subnet" ? 60 : 40);
+
+            const simulation = d3.forceSimulation(nodes)
+                .force("link", linkForce)
+                .force("charge", d3.forceManyBody().strength(-60))
+                .force("x", d3.forceX(clusterX).strength(0.3))
+                .force("y", d3.forceY(height / 2).strength(0.05))
+                .force("collide", d3.forceCollide().radius(d => d.type === "subnet" ? 30 : 20))
+                .on("tick", ticked);
+
+            const link = svg.selectAll(".link")
+                .data(links)
+                .enter().append("line")
+                .attr("class", "link")
+                .attr("stroke", "#999")
+                .attr("stroke-opacity", 0.6);
+
+            const node = svg.selectAll(".node")
+                .data(nodes)
+                .enter().append("g")
+                .attr("class", "node")
+                .call(d3.drag()
+                    .on("start", dragStarted)
+                    .on("drag", dragged)
+                    .on("end", dragEnded));
+
+            node.append("circle")
+                .attr("r", d => d.type === "subnet" ? 20 : 10)
+                .attr("fill", d => d.type === "subnet" ? color(d.id) : "#ccc")
+                .on("mouseover", (event, d) => {
+                    tooltip.transition().duration(200).style("opacity", .9);
+                    tooltip.html(d.type === "subnet"
+                        ? `<strong>Subnet:</strong> ${d.id}<br><strong>Devices:</strong> ${d.detectedDevices}`
+                        : `<strong>IP:</strong> ${d.id}<br><strong>Subnet:</strong> ${d.subnet}`)
+                        .style("left", (event.pageX + 5) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", () => {
+                    tooltip.transition().duration(500).style("opacity", 0);
+                });
+
+            node.append("text")
+                .attr("dy", 3)
+                .attr("x", d => d.type === "subnet" ? 0 : 12)
+                .style("text-anchor", d => d.type === "subnet" ? "middle" : "start")
+                .text(d => d.id);
+
+            function ticked() {
+                link
+                    .attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+
+                node
+                    .attr("transform", d => `translate(${d.x},${d.y})`);
+            }
+
+            function dragStarted(event, d) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+            }
+
+            function dragged(event, d) {
+                d.fx = event.x;
+                d.fy = event.y;
+            }
+
+            function dragEnded(event, d) {
+                if (!event.active) simulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+            }
+        }
+
+        function loadImplantDetail(implant) {
+            const implantDetail = document.getElementById("implantDetail");
+            const header = document.querySelector(".detail-header");
+            header.innerHTML = `<h3>${implant.id}</h3>`;
+
+            document.getElementById("lastCommand").innerText = implant.lastResponse || "None";
+
+            implantDetail.innerHTML = `
+                <div class="detail-body-content">
+                    <div class="detail-info">
+                        <h4>Implant Information</h4>
+                        <p>Status: <strong>${implant.status}</strong></p>
+                        <p>User: <strong>${implant.user}</strong></p>
+                        <p>Role: <strong>${implant.role}</strong></p>
+                        
+                        <div class="detail-images mt-4">
+                            <h4>Images</h4>
+                            <p>Recent Screenshot:</p>
+                            <img src="${implant.thumbnail}" alt="Screenshot">
+                            <p>Camera View:</p>
+                            <img src="${implant.cam}" alt="Camera View">
+                        </div>
+                    </div>
+                    <div class="detail-charts">
+                        <h4>Subnet Diagram</h4>
+                        <div id="subnet-chart" style="width:100%; height:200px; margin-bottom:15px;"></div>
+
+                        <div class="terminal-container">
+                            <h4>Terminal Output</h4>
+                            <div class="terminal">
+                                <p>Welcome to the terminal for ${implant.id}...</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary collapse-btn" onclick="collapseDetail()">Collapse</button>
+                    </div>
+                </div>
+            `;
+
+            renderSubnetChart(implant.subnet);
+        }
+
+        window.onload = async () => {
+            const choice = prompt("Type 'mock' for mock data, 'real' for real data:");
+            if (choice && choice.toLowerCase() === 'real') {
+                mode = 'real';
+                await fetch('/api/set_mode', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({mode})
+                });
+                await fetchRealData();
+            } else {
+                mode = 'mock';
+                await fetch('/api/set_mode', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({mode})
+                });
+                implants = mockImplants;
+            }
+            updateStats();
+            loadImplantSelection();
+        };
+
+        async function fetchRealData() {
+            try {
+                const statsRes = await fetch('/api/stats');
+                const statsData = await statsRes.json();
+                document.getElementById("activeImplants").innerText = statsData.activeImplants || 0;
+                document.getElementById("totalImplants").innerText = statsData.totalImplants || 0;
+                document.getElementById("disconnectedImplants").innerText = statsData.disconnectedImplants || 0;
+                const implantsRes = await fetch('/api/implants');
+                implants = await implantsRes.json();
+                realDataLoaded = true;
+            } catch (e) {
+                console.error("Error fetching real data:", e);
+                implants = [];
+                realDataLoaded = false;
+            }
+        }
+
+        function updateStats() {
+            if (mode === 'mock') {
+                const activeCount = implants.filter(i => i.status === "connected").length;
+                document.getElementById("activeImplants").innerText = activeCount;
+                document.getElementById("totalImplants").innerText = implants.length;
+                const disconnectedCount = implants.filter(i => i.status === "disconnected").length;
+                document.getElementById("disconnectedImplants").innerText = disconnectedCount;
+            } else {
+                if (!realDataLoaded) {
+                    document.getElementById("activeImplants").innerText = "0";
+                    document.getElementById("totalImplants").innerText = "0";
+                    document.getElementById("disconnectedImplants").innerText = "0";
+                }
+            }
+        }
+
+        function loadImplantSelection() {
+            const selectionContainer = document.getElementById("implantSelection");
+            selectionContainer.innerHTML = "";
+            if (implants.length === 0) {
+                selectionContainer.innerHTML = `<li class="implant-row"><div><strong>No Implants Loaded</strong></div></li>`;
+                return;
+            }
+
+            implants.forEach(implant => {
+                const row = document.createElement("li");
+                row.className = "implant-row";
+                row.innerHTML = `
+                    <div>
+                        <strong>${implant.id}</strong> (${implant.status})
+                    </div>
+                    <div>
+                        <img src="${implant.thumbnail}" alt="${implant.id}">
+                    </div>
+                `;
+                row.onclick = () => loadImplantDetail(implant);
+                selectionContainer.appendChild(row);
+            });
+
+            // Update active implants count
+            const activeCount = implants.filter(i => i.status === "connected").length;
+            document.getElementById("activeImplants").innerText = activeCount;
+
+            // Update total and disconnected
+            document.getElementById("totalImplants").innerText = implants.length;
+            const disconnectedCount = implants.filter(i => i.status === "disconnected").length;
+            document.getElementById("disconnectedImplants").innerText = disconnectedCount;
+        }
+
+        function loadImplantDetail(implant) {
+            const implantDetail = document.getElementById("implantDetail");
+            const header = document.querySelector(".detail-header");
+            header.innerHTML = `<h3>${implant.id}</h3>`;
+
+            document.getElementById("lastCommand").innerText = implant.lastResponse || "None";
+
+            implantDetail.innerHTML = `
+                <div class="detail-body-content">
+                    <div class="detail-info">
+                        <h4>Implant Information</h4>
+                        <p>Status: <strong>${implant.status}</strong></p>
+                        <p>User: <strong>${implant.user}</strong></p>
+                        <p>Role: <strong>${implant.role}</strong></p>
+                        
+                        <div class="detail-images mt-4">
+                            <h4>Images</h4>
+                            <p>Recent Screenshot:</p>
+                            <img src="${implant.thumbnail}" alt="Screenshot">
+                            <p>Camera View:</p>
+                            <img src="${implant.cam}" alt="Camera View">
+                        </div>
+                    </div>
+                    <div class="detail-charts">
+                        <h4>Subnet Diagram</h4>
+                        <div id="subnet-chart" style="width:100%; height:200px; margin-bottom:15px;"></div>
+
+                        <div class="terminal-container">
+                            <h4>Terminal Output</h4>
+                            <div class="terminal">
+                                <p>Welcome to the terminal for ${implant.id}...</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary collapse-btn" onclick="collapseDetail()">Collapse</button>
+                    </div>
+                </div>
+            `;
+
+            renderSubnetChart(implant.subnet);
+        }
+
+        // Commands by category
+        const commandsByCategory = {
+            general: [
+                'help',
+                'exit'
+            ],
+            listener: [
+                'listeners -g',
+                'sessions -l',
+                'sessions -i <id>' // requires argument
+            ],
+            session: [
+                'background',
+                'persist',
+                'kill',
+                'upload <file>', // requires argument: upload <file>
+                'download <file>' // requires argument: download <file>
+            ],
+            payload: [
+                'winplant py',
+                'winplant exe',
+                'linplant py',
+                'linplant sh',
+                'androidplant py',
+                'androidplant sh',
+                'androidplant apk'
+            ]
+        };
+
+        const commandCategoryButtons = document.querySelectorAll('.command-category-buttons .btn');
+        const commandButtonsRow = document.getElementById('commandButtonsRow');
+        const commandsTerminal = document.getElementById('commandsTerminal');
+        const commandsInputField = document.getElementById('commandsInputField');
+
+        commandCategoryButtons.forEach(btn => {
+            btn.onclick = () => {
+                const category = btn.getAttribute('data-category');
+                populateCommandButtons(category);
+            };
+        });
+
+        function populateCommandButtons(category) {
+            commandButtonsRow.innerHTML = '';
+            commandsByCategory[category].forEach(cmd => {
+                const b = document.createElement('button');
+                b.className = 'btn btn-info me-2 mb-2';
+                b.textContent = cmd;
+                b.onclick = () => {
+                    // Insert command into input field
+                    commandsInputField.value = cmd;
+                    commandsInputField.focus();
+                };
+                commandButtonsRow.appendChild(b);
+            });
+        }
+
+        // Set default category
+        populateCommandButtons('general');
+
+        // Press Enter in commandsInputField to run the command
+        commandsInputField.addEventListener('keydown', async (e) => {
+            if (e.key === 'Enter') {
+                const cmd = commandsInputField.value.trim();
+                if (!cmd) return;
+                await runCommand(cmd);
+                commandsInputField.value = '';
+            }
+        });
+
+        async function runCommand(cmd) {
+            const res = await fetch('/api/command', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({command: cmd})
+            });
+            const data = await res.json();
+            commandsTerminal.textContent += `\n> ${cmd}\n${data.output}`;
+            commandsTerminal.scrollTop = commandsTerminal.scrollHeight;
+        }
+
+        const navGlobalBtn = document.getElementById("navGlobalBtn");
+        const navImplantsBtn = document.getElementById("navImplantsBtn");
+        const navAgentsBtn = document.getElementById("navAgentsBtn");
+        const navCommandsBtn = document.getElementById("navCommandsBtn");
+        const globalSection = document.getElementById("globalSection");
+        const implantsSection = document.getElementById("implantsSection");
+        const agentsSection = document.getElementById("agentsSection");
+        const commandsSection = document.getElementById("commandsSection");
+
+        navGlobalBtn.onclick = () => showSection('global');
+        navImplantsBtn.onclick = () => showSection('implants');
+        navAgentsBtn.onclick = () => showSection('agents');
+        navCommandsBtn.onclick = () => showSection('commands');
+
+        function showSection(section) {
+            navGlobalBtn.classList.remove('active');
+            navImplantsBtn.classList.remove('active');
+            navAgentsBtn.classList.remove('active');
+            navCommandsBtn.classList.remove('active');
+            globalSection.classList.remove('active');
+            implantsSection.classList.remove('active');
+            agentsSection.classList.remove('active');
+            commandsSection.classList.remove('active');
+
+            if (section === 'global') {
+                navGlobalBtn.classList.add('active');
+                globalSection.classList.add('active');
+            } else if (section === 'implants') {
+                navImplantsBtn.classList.add('active');
+                implantsSection.classList.add('active');
+            } else if (section === 'agents') {
+                navAgentsBtn.classList.add('active');
+                agentsSection.classList.add('active');
+            } else if (section === 'commands') {
+                navCommandsBtn.classList.add('active');
+                commandsSection.classList.add('active');
+            }
+        }
+
+        const connectButton = document.getElementById("connectButton");
+        const globalTerminal = document.getElementById("globalTerminal");
+        connectButton.onclick = async () => {
+            const index = document.getElementById("implantIndexInput").value;
+            if (!index) {
+                globalTerminal.textContent += "\nPlease enter an implant index number.";
+                return;
+            }
+            const command = `sessions -i ${index}`;
+            const res = await fetch('/api/command', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({command})
+            });
+            const data = await res.json();
+            globalTerminal.textContent += `\n> ${command}\n${data.output}`;
+            globalTerminal.scrollTop = globalTerminal.scrollHeight;
+        };
+
+        window.onload = async () => {
+            const choice = prompt("Type 'mock' for mock data, 'real' for real data:");
+            if (choice && choice.toLowerCase() === 'real') {
+                mode = 'real';
+                await fetch('/api/set_mode', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({mode})
+                });
+                await fetchRealData();
+            } else {
+                mode = 'mock';
+                await fetch('/api/set_mode', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({mode})
+                });
+                implants = mockImplants;
+            }
+            updateStats();
+            loadImplantSelection();
+        };
+
+        async function fetchRealData() {
+            try {
+                const statsRes = await fetch('/api/stats');
+                const statsData = await statsRes.json();
+                document.getElementById("activeImplants").innerText = statsData.activeImplants || 0;
+                document.getElementById("totalImplants").innerText = statsData.totalImplants || 0;
+                document.getElementById("disconnectedImplants").innerText = statsData.disconnectedImplants || 0;
+                const implantsRes = await fetch('/api/implants');
+                implants = await implantsRes.json();
+                realDataLoaded = true;
+            } catch (e) {
+                console.error("Error fetching real data:", e);
+                implants = [];
+                realDataLoaded = false;
+            }
+        }
+
+        function updateStats() {
+            if (mode === 'mock') {
+                const activeCount = implants.filter(i => i.status === "connected").length;
+                document.getElementById("activeImplants").innerText = activeCount;
+                document.getElementById("totalImplants").innerText = implants.length;
+                const disconnectedCount = implants.filter(i => i.status === "disconnected").length;
+                document.getElementById("disconnectedImplants").innerText = disconnectedCount;
+            } else {
+                if (!realDataLoaded) {
+                    document.getElementById("activeImplants").innerText = "0";
+                    document.getElementById("totalImplants").innerText = "0";
+                    document.getElementById("disconnectedImplants").innerText = "0";
+                }
+            }
+        }
+    </script>
+</body>
+</html>
