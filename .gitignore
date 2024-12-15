@@ -1,0 +1,31 @@
+# Python cache directories
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment directories
+venv/
+.env/
+
+# Build artifacts from PyInstaller
+build/
+dist/
+*.spec
+
+# Buildozer build artifacts
+.android/
+.buildozer/
+bin/
+*.apk
+
+# Logs
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Editor/IDE configuration
+.vscode/
+.idea/
